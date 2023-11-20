@@ -43,6 +43,20 @@ module Packetz
       # some automatic cleanup for lazy
       at_exit { stop! unless stopped? }
     end
+
+    def add_filter(filter : String) : Nil
+      bpf = LibPcap::BpfProgram.new
+
+      # fun pcap_compile(capture : PcapT, bpf : BpfProgram*, buffer : LibC::Char*, optimize : LibC::Int, mask : BpfUInt32) : LibC::Int
+      if LibPcap.pcap_compile(capture: @handle, bpf: pointerof(bpf), buffer: filter, optimize: 0, mask: LibPcap::PCAP_NETMASK_UNKNOWN) != 0
+        LibPcap.pcap_perror(capture: @handle, prefix: "pcap_compile: ")
+        return
+      end
+
+      if LibPcap.pcap_setfilter(capture: @handle, bpf: pointerof(bpf)) != 0
+        LibPcap.pcap_perror(capture: @handle, prefix: "pcap_setfilter: ")
+        return
+      end
     end
 
     # Handles activating the actual packet capturing.

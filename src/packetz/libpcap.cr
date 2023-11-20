@@ -2,7 +2,8 @@ module Packetz
   @[Link("pcap")]
   lib LibPcap
     # Size to use when allocating the buffer that contains the libpcap errors.
-    PCAP_ERRBUF_SIZE = UInt8.new(255)
+    PCAP_ERRBUF_SIZE     = UInt8.new(255)
+    PCAP_NETMASK_UNKNOWN = 0xffffffff_u32
     type PcapT = Void*
     alias X__UInt = LibC::UInt
     alias UInt = X__UInt
@@ -12,6 +13,18 @@ module Packetz
     alias X__UChar = UInt8
     alias UChar = X__UChar
     alias PcapHandler = UChar*, PcapPkthdr*, UChar* -> Void
+
+    struct BpfInsn
+      code : LibC::UShort
+      jt : LibC::UChar
+      jf : LibC::UChar
+      k : BpfUInt32
+    end
+
+    struct BpfProgram
+      bf_len : LibC::UInt
+      bf_insns : BpfInsn*
+    end
 
     struct Timeval
       tv_sec : X__TimeT
@@ -100,9 +113,13 @@ module Packetz
     # http://www.tcpdump.org/manpages/pcap_set_timeout.3pcap.html
     fun pcap_set_timeout(capture : PcapT, timeout : LibC::Int) : LibC::Int
 
+    # Compile a filter expression.
+    # https://www.tcpdump.org/manpages/pcap_compile.3pcap.html
+    fun pcap_compile(capture : PcapT, bpf : BpfProgram*, buffer : LibC::Char*, optimize : LibC::Int, mask : BpfUInt32) : LibC::Int
+
     # Set a BPF filter on a capture.
     # http://www.tcpdump.org/manpages/pcap_setfilter.3pcap.html
-    # fun pcap_setfilter(capture : PcapT, bpf : BpfProgram*) : LibC::Int
+    fun pcap_setfilter(capture : PcapT, bpf : BpfProgram*) : LibC::Int
 
     # Set the time stamp precision returned in captures.
     # http://www.tcpdump.org/manpages/pcap_set_tstamp_precision.3pcap.html
@@ -137,5 +154,7 @@ module Packetz
     # Set immediate mode for a not-yet-activated capture handle.
     # Allows a libpcap-based program to process packets as soon as they arrive.
     fun pcap_set_immediate_mode(capture : PcapT, value : LibC::Int) : LibC::Int
+
+    fun pcap_perror(capture : PcapT, prefix : LibC::Char*)
   end
 end
