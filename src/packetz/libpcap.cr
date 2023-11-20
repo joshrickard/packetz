@@ -2,7 +2,7 @@ module Packetz
 	@[Link("pcap")]
 	lib LibPcap
 		# Size to use when allocating the buffer that contains the libpcap errors.
-		PCAP_ERRBUF_SIZE = UInt8.new(256)
+		PCAP_ERRBUF_SIZE = UInt8.new(255)
 		type PcapT = Void*
 		alias X__UInt = LibC::UInt
     alias UInt = X__UInt
