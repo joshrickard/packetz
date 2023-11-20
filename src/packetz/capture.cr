@@ -1,17 +1,17 @@
 module Packetz
-  # The `Capture` class is responsible for all of the supported capturing operations provided 
+  # The `Capture` class is responsible for all of the supported capturing operations provided
   # by `LibPcap` in a clean, friendly API.
-  # 
+  #
   # Simply start a new capture object called `cap`, with all the defaults:
   # ```
   # cap = Packetz::Capture.new
   # ```
-  # 
+  #
   # If you want to start customizing the capture object during initialization, you have a few
   # ways to do that to change the `interface`, `snapshot_length`, `promiscuous_mode` and `timeout_ms` values
   # of a capture.
   #
-  # Listen specifically on the `en0` network interface: 
+  # Listen specifically on the `en0` network interface:
   # ```
   # cap = Packetz::Capture.new("en0")
   # ```
@@ -20,28 +20,29 @@ module Packetz
   # ```
   # cap = Packetz::Capture.new(promiscuous_mode = true)
   # ```
-  # 
+  #
   # Change the default snapshot length from `65535` to half that size.
   # ```
   # cap = Packetz::Capture.new(snapshot_length: 65535/2)
   # ```
   class Capture
-    # The `#initialize` method takes care of setting up a **new** `Capture` object.  
-    def initialize(@interface        : String = Packetz.interfaces.default, 
-                   @snapshot_length  = 65535, 
-                   @promiscuous_mode : Bool | Int32 = 0, 
-                   @timeout_ms       = 1, 
-                   @monitor_mode     = false)
-      err      = LibPcap::PCAP_ERRBUF_SIZE.dup
-      @handle  = LibPcap.pcap_create(@interface, pointerof(err))
+    # The `#initialize` method takes care of setting up a **new** `Capture` object.
+    def initialize(@interface : String = Packetz.interfaces.default,
+                   @snapshot_length = 65535,
+                   @promiscuous_mode : Bool | Int32 = 0,
+                   @timeout_ms = 1,
+                   @monitor_mode = false)
+      err = LibPcap::PCAP_ERRBUF_SIZE.dup
+      @handle = LibPcap.pcap_create(@interface, pointerof(err))
       @stopped = true
       # need to actually set the given information with the C API
-      self.timeout_ms       = @timeout_ms
-      self.snapshot_length  = @snapshot_length
+      self.timeout_ms = @timeout_ms
+      self.snapshot_length = @snapshot_length
       self.promiscuous_mode = @promiscuous_mode
-      self.monitor_mode     = @monitor_mode
+      self.monitor_mode = @monitor_mode
       # some automatic cleanup for lazy
-      at_exit { stop! unless stopped? } 
+      at_exit { stop! unless stopped? }
+    end
     end
 
     # Handles activating the actual packet capturing.
@@ -65,10 +66,10 @@ module Packetz
     def interface=(interface : String)
       err = LibPcap::PCAP_ERRBUF_SIZE.dup
       @handle = LibPcap.pcap_create(@interface, pointerof(err))
-      self.timeout_ms       = self.timeout_ms
-      self.snapshot_length  = self.snapshot_length
+      self.timeout_ms = self.timeout_ms
+      self.snapshot_length = self.snapshot_length
       self.promiscuous_mode = self.promiscuous_mode
-      self.monitor_mode     = self.monitor_mode
+      self.monitor_mode = self.monitor_mode
     end
 
     def reset!
@@ -85,7 +86,7 @@ module Packetz
     end
 
     def started?
-      ! self.stopped?
+      !self.stopped?
     end
 
     def each
@@ -103,7 +104,7 @@ module Packetz
     def next
       raise Exception.new "Capture has been stopped!" if stopped?
       result = LibPcap.pcap_next_ex(@handle, out pkt_header, out pkt_data)
-      { result: result, header: pkt_header, data: pkt_data }
+      {result: result, header: pkt_header, data: pkt_data}
     end
 
     def supports_monitor_mode?
@@ -118,8 +119,8 @@ module Packetz
         # TODO: document erors
         raise Exception.new "Something went terribly wrong trying to enable monitor mode quickly!"
       end
-    end 
-    
+    end
+
     def monitor_mode=(value : Bool)
       case value
       when true
@@ -157,7 +158,7 @@ module Packetz
     def snapshot_length
       @snapshot_length
     end
-    
+
     def promiscuous_mode=(value : Bool)
       case value
       when true
@@ -170,9 +171,9 @@ module Packetz
     def promiscuous_mode=(value : Int32)
       case LibPcap.pcap_set_promisc(@handle, value)
       when 0
-        @promiscuous_mode = value 
+        @promiscuous_mode = value
         true
-      when -4 
+      when -4
         raise Exception.new "Promiscuous mode operation can't be performed on already activated captures."
       end
     end
@@ -185,7 +186,7 @@ module Packetz
         false
       end
     end
-    
+
     def promiscuous_mode!
       self.promiscuous_mode = 1
     end
@@ -225,7 +226,7 @@ module Packetz
         false
       end
     end
-    
+
     def nanosecond_timestamp_precision?
       case self.timestamp_precision
       when :nanosecond
@@ -266,11 +267,11 @@ module Packetz
         raise Exception.new "Operation can't be performed on already activated captures."
       end
     end
-    
+
     def immediate_mode!
       self.immediate_mode = 1
     end
-    
+
     def immediate_mode=(value : Bool)
       case value
       when true
@@ -307,14 +308,13 @@ module Packetz
         self.non_blocking_mode = 0
       end
     end
-    
+
     def non_blocking_mode?
       @non_blocking_mode || false
     end
-    
+
     def monitor_mode?
       @monitor_mode || false
     end
-
   end
 end
